@@ -5,14 +5,14 @@ import { stageAccent } from "../utils/stageColor.js";
 
 export default function WorkflowStage({
   stage,
-  defaultOpen = false,
+  open = false,
+  onToggle,
   savedTools,
   onToggleSave,
   onVisitTool,
   compareIds,
   onToggleCompare,
 }) {
-  const [open, setOpen] = useState(Boolean(defaultOpen));
   const [filter, setFilter] = useState("all");
   const accent = stageAccent(stage.capability);
   const tools = stage.recommendedTools || [];
@@ -28,7 +28,7 @@ export default function WorkflowStage({
     >
       <button
         type="button"
-        onClick={() => setOpen((current) => !current)}
+        onClick={onToggle}
         aria-expanded={open}
         className="focus-ring flex w-full items-center gap-3 px-4 py-4 text-left sm:gap-4 sm:px-6 sm:py-5"
       >
@@ -58,8 +58,9 @@ export default function WorkflowStage({
         </span>
       </button>
 
-      {open && (
-        <div className="animate-rise border-t border-purple-900/30 px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5">
+      <div className={`grid transition-[grid-template-rows] duration-500 ease-out ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
+        <div className={`min-h-0 overflow-hidden border-t border-purple-900/30 transition-[opacity,transform] duration-300 ease-out ${open ? "translate-y-0 opacity-100" : "-translate-y-2 opacity-0"}`}>
+          <div key={open ? "open" : "closed"} className="px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5">
           {tools.length === 0 ? (
             <p className="rounded-xl bg-zinc-900/50 p-4 text-sm leading-relaxed text-zinc-400 border border-purple-900/20">
               No suitable tools from the catalog match this stage yet. Try refining the goal or return after the catalog expands.
@@ -99,8 +100,9 @@ export default function WorkflowStage({
               )}
             </>
           )}
+          </div>
         </div>
-      )}
+      </div>
     </section>
   );
 }

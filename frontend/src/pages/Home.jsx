@@ -1,65 +1,65 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { analyzeTask } from "../api/client.js";
-import ProcessingState from "../components/ProcessingState.jsx";
-import SearchBar from "../components/SearchBar.jsx";
-import { useLocalList } from "../hooks/useLocalList.js";
+
+const EQUALIZER_BARS = [28, 46, 68, 38, 58, 76, 42, 62, 34, 54, 72, 44];
+const PARTICLES = [
+  { left: "12%", top: "24%", delay: "0s", size: "2px" },
+  { left: "22%", top: "72%", delay: "1.8s", size: "3px" },
+  { left: "78%", top: "28%", delay: "2.6s", size: "2px" },
+  { left: "88%", top: "68%", delay: "0.9s", size: "3px" },
+  { left: "66%", top: "14%", delay: "3.4s", size: "2px" },
+  { left: "35%", top: "84%", delay: "2.1s", size: "2px" },
+];
 
 export default function Home() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const recentSearches = useLocalList("aijukebox:recentSearches", {
-    max: 12,
-    keyFn: (item) => item.query,
-  });
+  const [leaving, setLeaving] = useState(false);
 
-  async function handleSubmit(query) {
-    setError(null);
-    setLoading(true);
-    try {
-      const result = await analyzeTask(query);
-      // Retaining the response makes recent tasks reopenable in local/demo mode
-      // as well as when MongoDB workflow persistence is enabled.
-      recentSearches.push({
-        query,
-        workflowId: result.workflowId,
-        stageCount: result.stages?.length ?? 0,
-        result,
-      });
-      navigate("/results", { state: { result } });
-    } catch (requestError) {
-      setError(requestError.message || "AIJukebox couldn't process that request.");
-    } finally {
-      setLoading(false);
-    }
+  function openFindTool() {
+    setLeaving(true);
+    window.setTimeout(() => navigate("/find"), 380);
   }
 
   return (
-    <div className="relative flex min-h-[calc(100vh-56px)] flex-col items-center justify-center overflow-hidden px-5 py-20 md:min-h-screen md:px-8">
-      <div className="pointer-events-none absolute left-1/2 top-1/2 h-[32rem] w-[32rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-indigo-100/65 via-rose-100/35 to-amber-100/55 blur-3xl" />
-      <div className="relative w-full max-w-3xl text-center">
-        {!loading ? (
-          <>
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-surface/75 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted shadow-sm">
-              <span className="h-1.5 w-1.5 rounded-full bg-stage-audio shadow-[0_0_10px_#ff4d9e]" />
-              Your creative signal
-            </div>
-            <h1 className="font-display text-4xl leading-[1.02] tracking-[-0.04em] sm:text-5xl md:text-6xl">
-              What do you want to <span className="rainbow-text">create?</span>
-            </h1>
-            <p className="mx-auto mt-5 max-w-xl text-[15px] leading-relaxed text-muted sm:text-base">
-              Say the goal in your own words. We will turn it into a simple AI playlist of stages and real tools.
-            </p>
-            <div className="mt-10 flex w-full flex-col items-center">
-              <SearchBar onSubmit={handleSubmit} disabled={loading} />
-            </div>
-            {error && <p className="mx-auto mt-4 max-w-md text-sm text-rose-600">{error}</p>}
-            <p className="mt-7 text-xs text-muted">One goal in. Your next creative workflow out.</p>
-          </>
-        ) : (
-          <ProcessingState />
-        )}
+    <div className={`home-experience relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-[#08050f] px-6 py-16 text-center ${leaving ? "home-experience--leaving" : ""}`}>
+      <div className="home-atmosphere" aria-hidden="true" />
+      <div className="home-visualizer home-visualizer--one" aria-hidden="true" />
+      <div className="home-visualizer home-visualizer--two" aria-hidden="true" />
+      <div className="home-orbit home-orbit--outer" aria-hidden="true" />
+      <div className="home-orbit home-orbit--inner" aria-hidden="true" />
+      <div className="home-waveform" aria-hidden="true">
+        {EQUALIZER_BARS.map((height, index) => (
+          <span key={index} style={{ height: `${height}%`, animationDelay: `${index * 90}ms` }} />
+        ))}
+      </div>
+      {PARTICLES.map((particle, index) => (
+        <span
+          key={index}
+          className="home-particle"
+          aria-hidden="true"
+          style={{ left: particle.left, top: particle.top, animationDelay: particle.delay, width: particle.size, height: particle.size }}
+        />
+      ))}
+      <span className="home-note home-note--one" aria-hidden="true">♪</span>
+      <span className="home-note home-note--two" aria-hidden="true">♫</span>
+      <span className="home-note home-note--three" aria-hidden="true">♩</span>
+
+      <div className="relative z-10 flex max-w-xl flex-col items-center">
+        <div className="home-mark mb-7 grid h-14 w-14 place-items-center rounded-full border border-purple-300/30 bg-white/10 text-xl font-bold text-white shadow-[0_0_35px_rgba(192,132,252,0.4)] backdrop-blur-md">
+          AJ
+        </div>
+        <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-purple-300/80">AIJukebox</p>
+        <h1 className="mt-4 font-display text-5xl font-bold tracking-tight text-white sm:text-7xl">AIJukebox</h1>
+        <p className="mt-5 max-w-md text-base leading-relaxed text-purple-100/70 sm:text-lg">
+          Find the right AI tools for any task - and turn them into a complete workflow.
+        </p>
+        <button
+          type="button"
+          onClick={openFindTool}
+          className="home-cta focus-ring mt-9 rounded-full border border-purple-200/30 bg-white/10 px-7 py-3.5 text-sm font-semibold text-white shadow-[0_0_28px_rgba(168,85,247,0.28)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-pink-300/60 hover:bg-purple-400/20 hover:shadow-[0_0_42px_rgba(236,72,153,0.48)] active:translate-y-0"
+        >
+          Find a Tool <span className="ml-1 text-pink-300">-&gt;</span>
+        </button>
       </div>
     </div>
   );

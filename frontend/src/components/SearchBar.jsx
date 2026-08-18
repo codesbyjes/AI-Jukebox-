@@ -22,13 +22,20 @@ export default function SearchBar({ onSubmit, disabled }) {
       <form
         onSubmit={submit}
         className={`relative flex items-center gap-2 rounded-2xl border bg-zinc-950/80 backdrop-blur-xl p-2 shadow-2xl transition-all duration-300 sm:gap-3 sm:p-2.5 ${
-          focused ? "border-purple-500 shadow-[0_0_25px_rgba(168,85,247,0.35)]" : "border-purple-900/40"
+          focused
+            ? "border-purple-500 shadow-[0_0_25px_rgba(168,85,247,0.35)]"
+            : "border-purple-900/40"
         }`}
       >
-        <span className="ml-2 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-purple-600 to-pink-500 text-white font-bold text-sm shadow-[0_0_10px_rgba(236,72,153,0.5)]" aria-hidden="true">
+        <span
+          className="ml-2 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-purple-600 to-pink-500 text-white font-bold text-sm shadow-[0_0_10px_rgba(236,72,153,0.5)]"
+          aria-hidden="true"
+        >
           ♫
         </span>
-        <label className="sr-only" htmlFor="goal-search">What do you want to create?</label>
+        <label className="sr-only" htmlFor="goal-search">
+          What do you want to create?
+        </label>
         <input
           id="goal-search"
           type="text"
@@ -56,7 +63,10 @@ export default function SearchBar({ onSubmit, disabled }) {
           <button
             key={suggestion}
             type="button"
-            onClick={() => setValue(suggestion)}
+            onClick={() => {
+              setValue(suggestion);
+              onSubmit(suggestion);
+            }}
             className="focus-ring rounded-full border border-purple-900/40 bg-zinc-900/60 backdrop-blur-md px-3.5 py-1.5 text-xs text-purple-300/80 transition-all hover:-translate-y-0.5 hover:border-purple-500/50 hover:bg-purple-950/40 hover:text-white hover:shadow-[0_0_12px_rgba(168,85,247,0.2)]"
           >
             {suggestion}

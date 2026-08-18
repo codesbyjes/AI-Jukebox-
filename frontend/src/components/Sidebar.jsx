@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 
 const MAIN_LINKS = [
   { to: "/", label: "Home", icon: "🎵" },
-  { to: "/", label: "Find a Tool", icon: "🔍" },
+  { to: "/find", label: "Find a Tool", icon: "🔍" },
 ];
 
 const JUKEBOX_LINKS = [

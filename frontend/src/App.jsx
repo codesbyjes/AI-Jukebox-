@@ -3,6 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import Sidebar from "./components/Sidebar.jsx";
 import IntroAnimation from "./components/IntroAnimation.jsx";
 import Home from "./pages/Home.jsx";
+import FindTool from "./pages/FindTool.jsx";
 import Results from "./pages/Results.jsx";
 import RecentTasks from "./pages/RecentTasks.jsx";
 import RecentlyUsed from "./pages/RecentlyUsed.jsx";
@@ -26,6 +27,7 @@ export default function App() {
         <main className="flex-1">
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/find" element={<FindTool />} />
             <Route path="/results" element={<Results />} />
             <Route path="/recent" element={<RecentTasks />} />
             <Route path="/recently-used" element={<RecentlyUsed />} />

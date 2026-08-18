@@ -1,0 +1,269 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+::selection {
+  background: #a855f7;
+  color: #ffffff;
+}
+
+html {
+  background-color: #09070f;
+  color-scheme: dark;
+}
+
+/* Deep Cyberpunk / Nightclub Atmosphere Background */
+body {
+  min-width: 320px;
+  color: #f3f0ff;
+  background-color: #09070f;
+  background-image:
+    radial-gradient(circle at 15% 15%, rgba(168, 85, 247, 0.18), transparent 30rem),
+    radial-gradient(circle at 85% 80%, rgba(236, 72, 153, 0.15), transparent 28rem),
+    radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.08), transparent 35rem);
+  background-attachment: fixed;
+}
+
+/* Metallic Silver Particles Effect on Click */
+button, .silver-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+button:active::after, .silver-btn:active::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: radial-gradient(circle, #ffffff 10%, #e2e8f0 40%, rgba(255, 255, 255, 0) 80%);
+  border-radius: 50%;
+  box-shadow: 
+    0 0 12px #fff,
+    -20px -25px 0 #cbd5e1, 25px -15px 0 #ffffff,
+    -30px 10px 0 #94a3b8, 30px 25px 0 #f8fafc,
+    -15px 30px 0 #e2e8f0, 15px -30px 0 #ffffff;
+  transform: translate(-50%, -50%) scale(2.5);
+  opacity: 0;
+  animation: silverSparkle 0.45s ease-out;
+}
+
+@keyframes silverSparkle {
+  0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(3.5); opacity: 0; }
+}
+
+/* Rainbow / Neon Gradient Text */
+.rainbow-text {
+  background: linear-gradient(90deg, #a855f7, #ec4899, #3b82f6, #f43f5e, #a855f7);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: rainbowShift 6s linear infinite;
+}
+
+@keyframes rainbowShift {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+.focus-ring:focus-visible {
+  outline: 2px solid #c084fc;
+  outline-offset: 2px;
+}
+
+/* Collapsible Hover Sidebar */
+.sidebar-drawer {
+  width: 4.5rem;
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 4px 0 25px rgba(0, 0, 0, 0.5);
+}
+
+.sidebar-drawer:hover {
+  width: 16rem;
+}
+
+.sidebar-text {
+  opacity: 0;
+  white-space: nowrap;
+  transition: opacity 0.25s ease-in-out;
+  pointer-events: none;
+}
+
+.sidebar-drawer:hover .sidebar-text {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Intro Screen Atmosphere */
+.intro-screen {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: white;
+  background: #06040a;
+  transition: opacity 560ms ease, visibility 560ms ease;
+}
+
+.intro-screen--leaving {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.intro-aurora {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(75px);
+  opacity: 0.55;
+  animation: introFloat 5.5s ease-in-out infinite alternate;
+}
+
+.intro-aurora--one {
+  width: 36rem;
+  height: 24rem;
+  top: -10rem;
+  left: -8rem;
+  background: #7e22ce;
+}
+
+.intro-aurora--two {
+  width: 30rem;
+  height: 26rem;
+  right: -8rem;
+  bottom: -10rem;
+  background: #db2777;
+  animation-delay: -2.5s;
+}
+
+.intro-scene {
+  position: relative;
+  width: min(80vw, 31rem);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+}
+
+.intro-rainbow-ring,
+.intro-orbit {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.intro-rainbow-ring {
+  width: 62%;
+  aspect-ratio: 1;
+  padding: 3px;
+  background: conic-gradient(from 210deg, #f43f5e, #ec4899, #a855f7, #6366f1, #3b82f6, #f43f5e);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  filter: drop-shadow(0 0 22px rgba(168, 85, 247, 0.75));
+  animation: introSpin 4.2s linear infinite, introReveal 880ms cubic-bezier(.2,.8,.2,1) both;
+}
+
+.intro-orbit {
+  border: 1px solid rgba(216, 180, 254, 0.2);
+  animation: introSpin 7s linear infinite;
+}
+
+.intro-orbit i {
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f472b6;
+  box-shadow: 0 0 14px #f472b6;
+}
+
+.intro-orbit--outer { width: 84%; aspect-ratio: 1; }
+.intro-orbit--inner { width: 48%; aspect-ratio: 1; animation-duration: 4.5s; animation-direction: reverse; }
+.intro-orbit--inner i { background: #c084fc; box-shadow: 0 0 14px #c084fc; }
+
+.intro-logo {
+  position: relative;
+  z-index: 2;
+  width: 28%;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(216, 180, 254, 0.35);
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 22%, #2e1065, #0f0728 65%, #05030a);
+  box-shadow: 0 14px 38px rgba(0,0,0,.7), inset 0 0 15px rgba(168, 85, 247, 0.3);
+  animation: introLogo 900ms cubic-bezier(.16,1,.3,1) both;
+}
+
+.intro-logo strong {
+  position: relative;
+  z-index: 2;
+  font: 700 clamp(1.2rem, 3.5vw, 1.7rem)/1 Inter, sans-serif;
+  letter-spacing: -.12em;
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(192, 132, 252, 0.8);
+}
+
+.intro-equalizer {
+  position: absolute;
+  z-index: 3;
+  bottom: 6%;
+  display: flex;
+  align-items: end;
+  height: 4.5rem;
+  gap: 4px;
+  opacity: 0;
+  animation: introFade 420ms 680ms forwards;
+}
+
+.intro-equalizer span {
+  display: block;
+  width: 3px;
+  min-height: 11px;
+  border-radius: 99px;
+  background: linear-gradient(#f43f5e, #c084fc 48%, #3b82f6);
+  transform-origin: bottom;
+  animation: introEqualize 860ms ease-in-out infinite alternate;
+}
+
+.workflow-connector {
+  height: 2.5rem;
+  width: 2px;
+  margin: 0 0 0 2.05rem;
+  overflow: hidden;
+  background: linear-gradient(#3b82f6, #a855f7, #ec4899);
+}
+
+.workflow-connector::after {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 45%;
+  background: linear-gradient(#f43f5e, #c084fc, #60a5fa);
+  animation: connectorFlow 1.8s ease-in-out infinite;
+}
+
+@keyframes connectorFlow { from { transform: translateY(-110%); } to { transform: translateY(270%); } }
+@keyframes introReveal { from { clip-path: inset(50% 50% 50% 50% round 50%); opacity: 0; } to { clip-path: inset(0 round 50%); opacity: 1; } }
+@keyframes introSpin { to { transform: rotate(360deg); } }
+@keyframes introFloat { to { transform: translate(3rem, 2rem) scale(1.12); } }
+@keyframes introLogo { from { opacity: 0; transform: scale(.45) rotate(-25deg); } to { opacity: 1; transform: scale(1) rotate(0); } }
+@keyframes introFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes introEqualize { from { transform: scaleY(.35); } to { transform: scaleY(1); } }

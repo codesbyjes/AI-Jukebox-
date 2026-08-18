@@ -21,7 +21,9 @@ export default function WorkflowStage({
 
   return (
     <section
-      className={`overflow-hidden rounded-[1.45rem] border bg-surface shadow-card transition-all duration-300 ${open ? "shadow-glow" : "hover:border-violet-200"}`}
+      className={`overflow-hidden rounded-2xl border bg-zinc-950/70 backdrop-blur-xl shadow-xl transition-all duration-300 ${
+        open ? "border-purple-500/60 shadow-[0_0_25px_rgba(168,85,247,0.25)]" : "border-purple-900/30 hover:border-purple-500/40"
+      }`}
       style={{ borderColor: open ? accent.hex : undefined }}
     >
       <button
@@ -31,20 +33,24 @@ export default function WorkflowStage({
         className="focus-ring flex w-full items-center gap-3 px-4 py-4 text-left sm:gap-4 sm:px-6 sm:py-5"
       >
         <span
-          className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-xs font-bold text-white shadow-sm"
-          style={{ background: `linear-gradient(135deg, ${accent.hex}, ${accent.hex}bb)` }}
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-xs font-bold text-white shadow-md"
+          style={{ background: `linear-gradient(135deg, ${accent.hex}, #1e1b4b)` }}
         >
           {String(stage.order).padStart(2, "0")}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate font-display text-lg leading-tight text-ink sm:text-xl">{stage.input} {"\u2192"} {stage.output}</span>
-          {stage.description && <span className="mt-1 block truncate text-sm text-muted">{stage.description}</span>}
+          <span className="block truncate font-display text-lg font-semibold leading-tight text-purple-100 sm:text-xl">
+            {stage.input} <span className="text-pink-400">{"\u2192"}</span> {stage.output}
+          </span>
+          {stage.description && <span className="mt-1 block truncate text-sm text-zinc-400">{stage.description}</span>}
         </span>
         <span className="flex shrink-0 items-center gap-3">
-          <span className="hidden text-xs text-muted sm:inline">{toolCount} recommended</span>
+          <span className="hidden text-xs text-purple-300/60 sm:inline">{toolCount} recommended</span>
           <span
-            className={`grid h-8 w-8 place-items-center rounded-full border text-lg transition-all ${open ? "rotate-90 bg-violet-50" : "border-line"}`}
-            style={{ color: accent.hex }}
+            className={`grid h-8 w-8 place-items-center rounded-full border text-lg transition-all ${
+              open ? "rotate-90 bg-purple-900/40 border-purple-500 text-white" : "border-purple-900/40 text-purple-400"
+            }`}
+            style={{ color: open ? "#ffffff" : accent.hex }}
             aria-hidden="true"
           >
             &gt;
@@ -53,23 +59,27 @@ export default function WorkflowStage({
       </button>
 
       {open && (
-        <div className="animate-rise border-t border-line px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5">
+        <div className="animate-rise border-t border-purple-900/30 px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5">
           {tools.length === 0 ? (
-            <p className="rounded-xl bg-[#fbfaf8] p-4 text-sm leading-relaxed text-muted">
+            <p className="rounded-xl bg-zinc-900/50 p-4 text-sm leading-relaxed text-zinc-400 border border-purple-900/20">
               No suitable tools from the catalog match this stage yet. Try refining the goal or return after the catalog expands.
             </p>
           ) : (
             <>
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted">Recommended AI tools</p>
-                  <p className="mt-1 text-xs text-muted">Filter the playlist without leaving your workflow.</p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-purple-400">Recommended AI tools</p>
+                  <p className="mt-1 text-xs text-zinc-400">Filter the playlist without leaving your workflow.</p>
                 </div>
-                <span className="rounded-full bg-[#fbfaf8] px-2.5 py-1 text-xs text-muted">{visibleTools.length} shown</span>
+                <span className="rounded-full bg-purple-950/60 border border-purple-800/40 px-3 py-1 text-xs text-purple-300">
+                  {visibleTools.length} shown
+                </span>
               </div>
               <div className="mb-5"><Filters active={filter} onChange={setFilter} /></div>
               {visibleTools.length === 0 ? (
-                <p className="rounded-xl border border-dashed border-line px-4 py-5 text-sm text-muted">No tools match this filter. Try another one.</p>
+                <p className="rounded-xl border border-dashed border-purple-900/40 px-4 py-5 text-sm text-zinc-400">
+                  No tools match this filter. Try another one.
+                </p>
               ) : (
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {visibleTools.map((entry, index) => (

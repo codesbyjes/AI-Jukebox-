@@ -19,12 +19,12 @@ export default function ProcessingState() {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center gap-6 py-24">
+    <div className="flex flex-col items-center justify-center gap-6 py-24 rounded-3xl bg-zinc-950/60 border border-purple-900/30 backdrop-blur-xl shadow-2xl">
       <div className="flex h-16 items-end gap-1.5">
         {Array.from({ length: 9 }).map((_, i) => (
           <span
             key={i}
-            className="w-1.5 rounded-full bg-gradient-to-t from-[#3E6BFF] via-[#8B5CF6] to-[#FF4D9E]"
+            className="w-1.5 rounded-full bg-gradient-to-t from-purple-600 via-pink-500 to-indigo-400 shadow-[0_0_10px_rgba(236,72,153,0.5)]"
             style={{
               height: `${20 + ((i * 37) % 40)}px`,
               animation: `eqbar 1.1s ease-in-out ${i * 0.08}s infinite`,
@@ -32,7 +32,9 @@ export default function ProcessingState() {
           />
         ))}
       </div>
-      <p className="text-sm font-medium text-muted transition-opacity">{STEPS[stepIndex]}</p>
+      <p className="text-sm font-semibold tracking-wide text-purple-200 transition-opacity animate-pulse">
+        {STEPS[stepIndex]}
+      </p>
       <style>{`
         @keyframes eqbar {
           0%, 100% { transform: scaleY(0.4); }

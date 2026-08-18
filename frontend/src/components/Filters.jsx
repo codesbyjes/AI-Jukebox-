@@ -15,10 +15,10 @@ export default function Filters({ active, onChange }) {
         <button
           key={f.key}
           onClick={() => onChange(f.key)}
-          className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors focus-ring ${
+          className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all focus-ring ${
             active === f.key
-              ? "border-transparent bg-rainbow text-white"
-              : "border-line text-muted hover:text-ink"
+              ? "border-purple-500 bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-[0_0_12px_rgba(168,85,247,0.4)]"
+              : "border-purple-900/40 bg-zinc-900/50 text-zinc-400 hover:border-purple-500/40 hover:text-purple-200"
           }`}
         >
           {f.label}

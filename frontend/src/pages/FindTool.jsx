@@ -46,7 +46,7 @@ export default function FindTool() {
               What are you trying to accomplish?
             </h1>
             <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-zinc-400 sm:text-lg">
-              Describe the outcome and AIJukebox will build the workflow around it.
+              Describe the outcome and <span className="brand-wordmark">AIJukebox</span> will build the workflow around it.
             </p>
             <div className="mt-10 flex w-full justify-center">
               <SearchBar onSubmit={handleSubmit} disabled={isLoading} />

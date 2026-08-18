@@ -10,9 +10,7 @@ import RecentlyUsed from "./pages/RecentlyUsed.jsx";
 import SavedTools from "./pages/SavedTools.jsx";
 
 export default function App() {
-  const [showIntro, setShowIntro] = useState(
-    () => !sessionStorage.getItem("aijukebox:introShown")
-  );
+  const [showIntro, setShowIntro] = useState(true);
 
   function finishIntro() {
     sessionStorage.setItem("aijukebox:introShown", "1");

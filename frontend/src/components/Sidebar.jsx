@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import AJLogo from "./AJLogo.jsx";
 
 const MAIN_LINKS = [
   { to: "/", label: "Home", icon: "🎵" },
@@ -41,10 +42,8 @@ export default function Sidebar() {
   const body = (
     <div className="flex h-full flex-col gap-7 border-r border-purple-900/40 bg-zinc-950/80 backdrop-blur-xl px-3.5 py-6 overflow-hidden">
       <Link to="/" className="flex items-center gap-3 px-1">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 text-xs font-bold text-white shadow-[0_0_12px_rgba(236,72,153,0.5)]">
-          AJ
-        </span>
-        <span className="sidebar-text font-display text-xl font-bold tracking-wide bg-gradient-to-r from-purple-300 via-pink-300 to-white bg-clip-text text-transparent">
+        <AJLogo variant="sidebar" className="sidebar-aj-mark" />
+        <span className="sidebar-text brand-wordmark font-display text-xl font-bold tracking-wide">
           AIJukebox
         </span>
       </Link>
@@ -79,10 +78,8 @@ export default function Sidebar() {
       {/* Mobile navigation header */}
       <div className="flex items-center justify-between border-b border-purple-900/40 bg-zinc-950/90 backdrop-blur-md px-4 py-3 md:hidden z-30">
         <Link to="/" className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 text-[10px] font-bold text-white">
-            AJ
-          </span>
-          <span className="font-display text-base font-bold text-purple-200">AIJukebox</span>
+          <AJLogo variant="sidebar" className="sidebar-aj-mark sidebar-aj-mark--mobile" />
+          <span className="brand-wordmark font-display text-base font-bold">AIJukebox</span>
         </Link>
         <button
           aria-label="Open navigation"

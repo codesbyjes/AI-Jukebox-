@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import AJLogo from "../components/AJLogo.jsx";
 
 const EQUALIZER_BARS = [28, 46, 68, 38, 58, 76, 42, 62, 34, 54, 72, 44];
 const PARTICLES = [
@@ -45,11 +46,9 @@ export default function Home() {
       <span className="home-note home-note--three" aria-hidden="true">♩</span>
 
       <div className="relative z-10 flex max-w-xl flex-col items-center">
-        <div className="home-mark mb-7 grid h-14 w-14 place-items-center rounded-full border border-purple-300/30 bg-white/10 text-xl font-bold text-white shadow-[0_0_35px_rgba(192,132,252,0.4)] backdrop-blur-md">
-          AJ
-        </div>
-        <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-purple-300/80">AIJukebox</p>
-        <h1 className="mt-4 font-display text-5xl font-bold tracking-tight text-white sm:text-7xl">AIJukebox</h1>
+        <AJLogo className="home-mark mb-7" />
+        <p className="brand-wordmark text-[10px] font-bold uppercase tracking-[0.35em]">AIJukebox</p>
+        <h1 className="brand-wordmark mt-4 font-display text-5xl font-bold tracking-tight sm:text-7xl">AIJukebox</h1>
         <p className="mt-5 max-w-md text-base leading-relaxed text-purple-100/70 sm:text-lg">
           Find the right AI tools for any task - and turn them into a complete workflow.
         </p>

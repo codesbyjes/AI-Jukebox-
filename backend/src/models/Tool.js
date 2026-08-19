@@ -23,7 +23,7 @@ const ToolSchema = new mongoose.Schema(
     rating: { type: Number, min: 0, max: 5, default: 4.0 },
     qualityScore: { type: Number, min: 0, max: 100, default: 70 },
 
-    tags: { type: [String], default: [] },
+    tags: { type: [String], default: [], index: true },
     officialWebsiteUrl: { type: String, required: true },
     logoUrl: { type: String, default: "" },
   },

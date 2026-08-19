@@ -5,6 +5,7 @@ import WorkflowStage from "../components/WorkflowStage.jsx";
 import ProcessingState from "../components/ProcessingState.jsx";
 import { fetchWorkflow } from "../api/client.js";
 import { useLocalList } from "../hooks/useLocalList.js";
+import { useSessionMix } from "../context/SessionMixContext.jsx";
 
 const toolKey = (tool) => tool._id || tool.name;
 
@@ -25,6 +26,7 @@ function normaliseWorkflow(workflow) {
 
 export default function Results() {
   const location = useLocation();
+  const { selectWorkflow } = useSessionMix();
   const [searchParams] = useSearchParams();
   const workflowId = searchParams.get("id");
   const [plan, setPlan] = useState(location.state?.result || null);
@@ -43,6 +45,17 @@ export default function Results() {
       .catch((requestError) => setError(requestError.message))
       .finally(() => setIsLoading(false));
   }, [plan, workflowId]);
+
+  useEffect(() => {
+    if (!location.state?.result) return;
+    setPlan(normaliseWorkflow(location.state.result));
+    setError(null);
+    setIsLoading(false);
+    setActiveStage(null);
+    setCompareIds([]);
+    setCompareTools({});
+    if (location.state.mixId) selectWorkflow(location.state.mixId);
+  }, [location.key, selectWorkflow]);
 
   function handleToggleCompare(tool) {
     const key = toolKey(tool);

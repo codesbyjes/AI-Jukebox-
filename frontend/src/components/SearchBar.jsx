@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
 
-const SUGGESTIONS = [
-  "📄 Turn a PDF into a video",
-  "🎓 Turn notes into a study guide",
-  "🎙️ Convert text to voice",
-  "📱 Turn video into short clips",
+export const EXAMPLE_PROMPTS = [
+  { label: "📄 Research paper → YouTube video", query: "Turn my research paper into a polished 5-minute YouTube video" },
+  { label: "🎓 Lecture notes → study kit", query: "Turn my lecture notes into a study guide, quiz and flashcards" },
+  { label: "🎙️ Podcast idea → full episode", query: "Turn a podcast idea into a full episode with script, voice and video" },
+  { label: "🚀 Business idea → launch plan", query: "Turn my business idea into a pitch deck, website and marketing plan" },
 ];
 
 const PLACEHOLDERS = [
-  "Turn my research paper into a video...",
-  "Create a presentation from my notes...",
-  "Turn my podcast into short videos...",
-  "Build a pitch deck from my idea...",
-  "Convert my text into a realistic voice...",
+  "Turn my research paper into a polished 5-minute YouTube video...",
+  "Create a complete social media campaign for my college event...",
+  "Turn my lecture notes into a study guide, quiz and flashcards...",
+  "Turn my product idea into a brand, landing page and launch campaign...",
+  "Create a short documentary from my research and source material...",
 ];
 
 export default function SearchBar({ onSubmit, disabled }) {
@@ -75,17 +75,17 @@ export default function SearchBar({ onSubmit, disabled }) {
       </form>
 
       <div className="mt-4 flex flex-wrap justify-center gap-2">
-        {SUGGESTIONS.map((suggestion) => (
+        {EXAMPLE_PROMPTS.map((suggestion) => (
           <button
-            key={suggestion}
+            key={suggestion.query}
             type="button"
             onClick={() => {
-              setValue(suggestion);
-              onSubmit(suggestion);
+              setValue(suggestion.query);
+              onSubmit(suggestion.query);
             }}
             className="find-tool-chip focus-ring rounded-full px-3.5 py-1.5 text-xs transition-all hover:-translate-y-0.5"
           >
-            {suggestion}
+            {suggestion.label}
           </button>
         ))}
       </div>

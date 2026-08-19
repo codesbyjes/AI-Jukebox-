@@ -2,26 +2,24 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { analyzeTask } from "../api/client.js";
 import ProcessingState from "../components/ProcessingState.jsx";
-import SearchBar from "../components/SearchBar.jsx";
+import SearchBar, { EXAMPLE_PROMPTS } from "../components/SearchBar.jsx";
 import { useLocalList } from "../hooks/useLocalList.js";
+import { useSessionMix } from "../context/SessionMixContext.jsx";
 
 export default function FindTool() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showInvalidTaskModal, setShowInvalidTaskModal] = useState(false);
+  const [isClosingInvalidTaskModal, setIsClosingInvalidTaskModal] = useState(false);
+  const { addWorkflow } = useSessionMix();
   const recentSearches = useLocalList("aijukebox:recentSearches", {
     max: 12,
     keyFn: (item) => item.query,
   });
-  const examples = [
-    "📄 Research Paper → Video",
-    "🎓 Notes → Presentation",
-    "🎙️ Podcast → Shorts",
-    "🚀 Idea → Pitch Deck",
-  ];
-
   async function handleSubmit(query) {
     setError(null);
+    setShowInvalidTaskModal(false);
     setIsLoading(true);
     try {
       const result = await analyzeTask(query);
@@ -31,9 +29,15 @@ export default function FindTool() {
         stageCount: result.stages?.length ?? 0,
         result,
       });
-      navigate("/results", { state: { result } });
+      const mixId = addWorkflow(result, query);
+      navigate("/results", { state: { result, mixId } });
     } catch (requestError) {
-      setError(requestError.message || "AIJukebox could not process that request.");
+      if (requestError.code === "INVALID_TASK") {
+        setIsClosingInvalidTaskModal(false);
+        setShowInvalidTaskModal(true);
+      } else {
+        setError(requestError.message || "AIJukebox could not process that request.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -77,15 +81,15 @@ export default function FindTool() {
                 <span>See what AIJukebox can build from a simple goal.</span>
               </div>
               <div className="find-tool-example-list">
-                {examples.map((example) => (
+                {EXAMPLE_PROMPTS.map((example) => (
                   <button
-                    key={example}
+                    key={example.query}
                     type="button"
                     className="find-tool-example-card focus-ring"
-                    onClick={() => handleSubmit(example.replace(/^[^ ]+ /, "").replace(" → ", " to "))}
+                    onClick={() => handleSubmit(example.query)}
                   >
                     <span className="find-tool-example-tag">Try this</span>
-                    <span>{example}</span>
+                    <span>{example.label}</span>
                   </button>
                 ))}
               </div>
@@ -93,6 +97,27 @@ export default function FindTool() {
           </>
         )}
       </div>
+      {showInvalidTaskModal && (
+        <div className={`invalid-task-modal-backdrop ${isClosingInvalidTaskModal ? "invalid-task-modal-backdrop--closing" : ""}`} role="presentation">
+          <div className={`invalid-task-modal ${isClosingInvalidTaskModal ? "invalid-task-modal--closing" : ""}`} role="alertdialog" aria-modal="true" aria-labelledby="invalid-task-title">
+            <p id="invalid-task-title" className="invalid-task-modal-title">Sorry, I wasn't able to understand your request.</p>
+            <p className="invalid-task-modal-message">Please try using different wording.</p>
+            <button
+              type="button"
+              className="invalid-task-modal-button focus-ring"
+              onClick={() => {
+                setIsClosingInvalidTaskModal(true);
+                window.setTimeout(() => {
+                  setShowInvalidTaskModal(false);
+                  setIsClosingInvalidTaskModal(false);
+                }, 180);
+              }}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

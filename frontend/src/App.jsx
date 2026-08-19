@@ -9,6 +9,7 @@ import Results from "./pages/Results.jsx";
 import RecentTasks from "./pages/RecentTasks.jsx";
 import RecentlyUsed from "./pages/RecentlyUsed.jsx";
 import SavedTools from "./pages/SavedTools.jsx";
+import { SessionMixProvider } from "./context/SessionMixContext.jsx";
 
 export default function App() {
   const [showIntro, setShowIntro] = useState(true);
@@ -38,7 +39,7 @@ export default function App() {
   }
 
   return (
-    <>
+    <SessionMixProvider>
       {showIntro && <IntroAnimation onDone={finishIntro} />}
       <div className={`app-shell flex min-h-screen bg-canvas ${libraryClass}`}>
         <Sidebar />
@@ -53,6 +54,6 @@ export default function App() {
           </Routes>
         </main>
       </div>
-    </>
+    </SessionMixProvider>
   );
 }

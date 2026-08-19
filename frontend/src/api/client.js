@@ -5,14 +5,17 @@ const BASE = `${import.meta.env.VITE_API_BASE || ""}/api`;
 async function handle(res) {
   if (!res.ok) {
     let message = "Something went wrong. Please try again.";
+    let body = null;
     try {
-      const body = await res.json();
-      if (body?.error) message = body.error;
+      body = await res.json();
     } catch {
       // ignore — keep default message, never leak raw text/stack traces
     }
+    if (body?.message) message = body.message;
+    else if (body?.error) message = body.error;
     const err = new Error(message);
     err.status = res.status;
+    err.code = body?.errorCode;
     throw err;
   }
   return res.json();

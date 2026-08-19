@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import AJLogo from "./AJLogo.jsx";
+import { useSessionMix } from "../context/SessionMixContext.jsx";
 
 const MAIN_LINKS = [
   { to: "/", label: "Home", icon: "🎵" },
@@ -13,6 +14,15 @@ const JUKEBOX_LINKS = [
   { to: "/saved", label: "Saved Tools", icon: "⭐" },
 ];
 
+function activeTheme(path) {
+  if (path === "/find") return "pink";
+  if (path === "/results") return "purple";
+  if (path === "/recent") return "recent";
+  if (path === "/recently-used") return "used";
+  if (path === "/saved") return "saved";
+  return "purple";
+}
+
 function NavList({ links, currentPath }) {
   return (
     <ul className="space-y-1.5">
@@ -20,12 +30,8 @@ function NavList({ links, currentPath }) {
         <li key={l.label}>
           <Link
             to={l.to}
-            className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 focus-ring ${
-              currentPath === l.to
-                ? l.to === "/find"
-                  ? "bg-pink-600/20 text-pink-100 border border-pink-400/40 shadow-[0_0_18px_rgba(236,72,153,0.28)]"
-                  : "bg-purple-600/30 text-purple-200 border border-purple-500/40 shadow-[0_0_15px_rgba(168,85,247,0.25)]"
-                : "text-zinc-400 hover:bg-purple-950/40 hover:text-purple-100 hover:border hover:border-purple-500/20"
+            className={`sidebar-nav-link sidebar-nav-link--${activeTheme(l.to)} flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 focus-ring ${
+              currentPath === l.to ? "sidebar-nav-link--active" : ""
             }`}
           >
             <span className="text-base shrink-0">{l.icon}</span>
@@ -40,6 +46,7 @@ function NavList({ links, currentPath }) {
 export default function Sidebar() {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
+  const { entries, selectedId, selectWorkflow } = useSessionMix();
 
   const body = (
     <div className="flex h-full flex-col gap-7 border-r border-purple-900/40 bg-zinc-950/80 backdrop-blur-xl px-3.5 py-6 overflow-hidden">
@@ -55,6 +62,34 @@ export default function Sidebar() {
           Discover
         </p>
         <NavList links={MAIN_LINKS} currentPath={pathname} />
+        {entries.length > 0 && (
+          <div className="sidebar-mix-tree">
+            <Link
+              to="/results"
+              state={{ result: entries.find((entry) => entry.id === selectedId)?.result || entries[entries.length - 1].result, mixId: selectedId || entries[entries.length - 1].id }}
+              className={`sidebar-nav-link sidebar-nav-link--purple sidebar-mix-link flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-semibold transition-all duration-200 focus-ring ${pathname === "/results" ? "sidebar-nav-link--active" : ""}`}
+            >
+              <span className="text-sm shrink-0">🎚️</span>
+              <span className="sidebar-text">Your AI Mix</span>
+            </Link>
+            <ul className="sidebar-mix-requests">
+              {entries.map((entry, index) => (
+                <li key={entry.id}>
+                  <Link
+                    to="/results"
+                    state={{ result: entry.result, mixId: entry.id }}
+                    onClick={() => selectWorkflow(entry.id)}
+                    className={`sidebar-mix-request sidebar-text focus-ring ${selectedId === entry.id ? "sidebar-mix-request--selected" : ""}`}
+                    title={entry.query}
+                  >
+                    <span>{String(index + 1).padStart(2, "0")}</span>
+                    <span>{entry.query}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
       <div>

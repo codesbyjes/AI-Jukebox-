@@ -8,8 +8,8 @@ const MAIN_LINKS = [
 ];
 
 const JUKEBOX_LINKS = [
-  { to: "/recent", label: "Recent Tasks", icon: "⏱️" },
-  { to: "/recently-used", label: "Recently Used", icon: "🎧" },
+  { to: "/recent", label: "Recently Searched Tasks", icon: "⏱️" },
+  { to: "/recently-used", label: "Recently Used Tools", icon: "🎧" },
   { to: "/saved", label: "Saved Tools", icon: "⭐" },
 ];
 
@@ -22,7 +22,9 @@ function NavList({ links, currentPath }) {
             to={l.to}
             className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 focus-ring ${
               currentPath === l.to
-                ? "bg-purple-600/30 text-purple-200 border border-purple-500/40 shadow-[0_0_15px_rgba(168,85,247,0.25)]"
+                ? l.to === "/find"
+                  ? "bg-pink-600/20 text-pink-100 border border-pink-400/40 shadow-[0_0_18px_rgba(236,72,153,0.28)]"
+                  : "bg-purple-600/30 text-purple-200 border border-purple-500/40 shadow-[0_0_15px_rgba(168,85,247,0.25)]"
                 : "text-zinc-400 hover:bg-purple-950/40 hover:text-purple-100 hover:border hover:border-purple-500/20"
             }`}
           >

@@ -8,11 +8,11 @@ const RULES = [
 ];
 
 const COLOR_HEX = {
-  doc: "#3E6BFF",
-  write: "#FF7A45",
-  audio: "#FF4D9E",
-  video: "#8B5CF6",
-  image: "#F5B700",
+  doc: "#D77AAB",
+  write: "#D98C8E",
+  audio: "#D85B9D",
+  video: "#A477C7",
+  image: "#B58AAE",
 };
 
 export function stageAccent(capability = "") {

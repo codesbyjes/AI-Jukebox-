@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocalList } from "../hooks/useLocalList.js";
-import ToolCard from "../components/ToolCard.jsx";
+import ComparisonBar from "../components/ComparisonBar.jsx";
 
 const toolKey = (tool) => tool._id || tool.name;
 
@@ -8,53 +8,58 @@ export default function SavedTools() {
   const savedTools = useLocalList("aijukebox:savedTools", { keyFn: toolKey });
   const recentlyUsed = useLocalList("aijukebox:recentlyUsed", { max: 30, keyFn: toolKey });
   const [compareIds, setCompareIds] = useState([]);
+  const [compareTools, setCompareTools] = useState({});
   const toolsArray = savedTools.items;
 
   function handleToggleCompare(tool) {
     const key = toolKey(tool);
     setCompareIds((current) => current.includes(key) ? current.filter((id) => id !== key) : current.length < 3 ? [...current, key] : current);
+    setCompareTools((current) => ({ ...current, [key]: tool }));
   }
 
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
-      <div className="mb-8 border-b border-purple-900/30 pb-6">
-        <div className="flex items-center gap-3">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-purple-900/40 text-lg text-pink-400 border border-purple-700/30 shadow-md">
-            ★
-          </span>
-          <div>
-            <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">Saved AI Tools</h1>
-            <p className="text-xs text-zinc-400 mt-0.5">Your personal collection of bookmarked AI software.</p>
-          </div>
-        </div>
-      </div>
+    <div className="library-page saved-tools-page">
+      <div className="library-atmosphere" aria-hidden="true"><span>✦</span><span>♪</span><span>·</span><span>✧</span></div>
+      <div className="library-inner max-w-5xl">
+        <div className="library-kicker">Your collection <span>★</span></div>
+        <h1 className="library-title font-display">Saved Tools</h1>
+        <p className="library-subtitle">Your personal AI collection.</p>
 
       {toolsArray.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-purple-900/40 bg-zinc-950/50 p-12 text-center backdrop-blur-xl">
-          <span className="text-4xl mb-3">🎵</span>
-          <p className="text-base font-semibold text-purple-200">No saved tools yet</p>
-          <p className="mt-1 text-xs text-zinc-400 max-w-sm">
-            Click the star icon on any tool card while exploring playlists to save tools to your library.
-          </p>
+        <div className="library-empty saved-empty">
+          <div className="empty-album-mark" aria-hidden="true">★</div>
+          <h2>Nothing saved yet</h2>
+          <p>Save tools you love and build your AI collection.</p>
+          <a href="/find" className="library-empty-cta focus-ring">Explore AI tools <span>→</span></a>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="saved-tool-grid">
           {toolsArray.map((tool, index) => (
-            <ToolCard
+            <article
               key={tool?._id || tool?.name || index}
-              entry={{ tool, score: 1, explanation: "Saved in your library" }}
-              index={index}
-              isSaved={true}
-              onToggleSave={savedTools.toggle}
-              onVisit={recentlyUsed.push}
-              compareSelected={compareIds.includes(tool?._id || tool?.name)}
-              onToggleCompare={handleToggleCompare}
-              compareDisabled={compareIds.length >= 3}
-            />
+              className="saved-tool-card"
+              style={{ animationDelay: `${index * 70}ms` }}
+            >
+              <div className="saved-tool-top"><span className="saved-tool-logo">{tool.name.slice(0, 2).toUpperCase()}</span><span className="saved-tool-star">★ Saved</span></div>
+              <h2>{tool.name}</h2>
+              <p className="saved-tool-category">{tool.category}</p>
+              <p className="saved-tool-description">{tool.description}</p>
+              <div className="saved-tool-actions">
+                <a href={tool.officialWebsiteUrl} target="_blank" rel="noopener noreferrer" onClick={() => recentlyUsed.push(tool)} className="saved-tool-open focus-ring">Open tool <span>→</span></a>
+                <button type="button" onClick={() => savedTools.remove(tool)} className="saved-tool-remove focus-ring" aria-label={`Remove ${tool.name} from saved tools`}>Remove</button>
+                <button type="button" onClick={() => handleToggleCompare(tool)} className="saved-tool-compare focus-ring">{compareIds.includes(toolKey(tool)) ? "Compared" : "Compare"}</button>
+              </div>
+            </article>
           ))}
         </div>
       )}
+      <ComparisonBar
+        tools={compareIds.map((id) => compareTools[id]).filter(Boolean)}
+        onRemove={handleToggleCompare}
+        onClear={() => { setCompareIds([]); setCompareTools({}); }}
+      />
+      </div>
     </div>
   );
 }

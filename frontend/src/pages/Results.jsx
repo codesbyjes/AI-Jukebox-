@@ -84,17 +84,23 @@ export default function Results() {
   const request = plan.query || plan.userGoal || "Your AI workflow request";
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 space-y-8">
-      <div className="rounded-2xl border border-purple-800/40 bg-zinc-950/75 px-5 py-4 shadow-[0_0_28px_rgba(168,85,247,0.12)] backdrop-blur-xl sm:px-6">
-        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-purple-400">Your request</p>
-        <p className="mt-2 text-base font-medium leading-relaxed text-purple-50 sm:text-lg">&quot;{request}&quot;</p>
+    <div className="workflow-page relative mx-auto w-full max-w-5xl space-y-8 overflow-hidden px-4 py-8 sm:px-6">
+      <div className="workflow-smoke workflow-smoke--one" />
+      <div className="workflow-smoke workflow-smoke--two" />
+      <div className="workflow-staff" />
+      <div className="workflow-note workflow-note--one" aria-hidden="true">♪</div>
+      <div className="workflow-note workflow-note--two" aria-hidden="true">♫</div>
+      <div className="workflow-request-card">
+        <p className="workflow-eyebrow">Your request</p>
+        <p className="mt-2 text-base font-medium leading-relaxed text-rose-50 sm:text-lg">&quot;{request}&quot;</p>
       </div>
 
       <div className="space-y-5">
-        <div className="border-b border-purple-900/30 pb-5">
+        <div className="workflow-heading border-b pb-5">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-purple-400">Workflow</p>
-            <h1 className="mt-1 font-display text-2xl font-bold text-white sm:text-3xl">Generated AI playlist</h1>
+            <p className="workflow-eyebrow">Workflow</p>
+            <h1 className="mt-1 font-display text-2xl font-bold text-white sm:text-3xl">Your AI Mix</h1>
+            <p className="workflow-subtitle mt-2">Your goal, remixed into the steps you need.</p>
           </div>
         </div>
 

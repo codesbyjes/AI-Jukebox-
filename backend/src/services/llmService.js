@@ -36,9 +36,18 @@ Rules:
   preference) only when the user states or clearly implies them. Otherwise
   leave them null/absent.
 
+Classify the request before decomposing it. A request is valid only when it
+describes a meaningful, actionable goal involving creation, transformation,
+research, analysis, planning, or finding a tool. Greetings, names, isolated
+numbers, random words, and vague nonsense are invalid. Never force an invalid
+request into a default workflow.
+
 Return JSON matching exactly this shape:
 {
+  "valid": boolean,
+  "confidence": number,
   "goal": string,
+  "intent": string,
   "input": string,
   "output": string,
   "constraints": {
@@ -74,10 +83,26 @@ function makeStage(name, input, output, capability, description) {
   return { name, input, output, capability, description };
 }
 
+const ACTION_WORDS = ["create", "make", "turn", "convert", "build", "generate", "find", "summarize", "analyze", "research", "plan", "design", "edit", "transcrib", "translate", "organize", "prepare", "develop"];
+const TASK_TERMS = ["paper", "research", "lecture", "notes", "flashcard", "quiz", "presentation", "slide", "video", "youtube", "podcast", "voice", "audio", "image", "logo", "brand", "website", "landing page", "campaign", "event", "business", "pitch", "marketing", "social media", "data", "spreadsheet", "csv", "dataset", "code", "program", "music", "song", "document", "pdf", "tool", "artificial intelligence", "ai "];
+
+function hasActionableIntent(text) {
+  const hasAction = ACTION_WORDS.some((word) => text.includes(word));
+  const hasTaskTerm = TASK_TERMS.some((term) => text.includes(term));
+  const words = text.split(/\s+/).filter(Boolean);
+  const uniqueWords = new Set(words);
+  return hasAction && hasTaskTerm && words.length >= 3 && uniqueWords.size >= 3;
+}
+
+function invalidAnalysis(query) {
+  return { valid: false, confidence: 0, goal: null, intent: null, input: null, output: null, constraints: {}, stages: [], query };
+}
+
 // Used only when the configured provider is unavailable. It selects existing
 // catalog capability labels and never selects, suggests, or fabricates tools.
 export function analyzeTaskLocally(query) {
   const text = query.toLowerCase();
+  if (!hasActionableIntent(text)) return invalidAnalysis(query);
   const constraints = {
     pricing: contains(text, ["free", "no cost", "without paying", "budget"]) ? "free_preferred" : "no_preference",
     apiRequired: contains(text, [" api", "api ", "api-", "integrat"]),
@@ -87,8 +112,10 @@ export function analyzeTaskLocally(query) {
   let input = "brief";
   let output = "result";
   let stages;
+  let intent = "task_creation";
 
   if (contains(text, ["pdf", "research paper", "research document"]) && contains(text, ["video", "film", "youtube"])) {
+    intent = "content_transformation";
     input = "PDF";
     output = "video";
     stages = [
@@ -98,50 +125,82 @@ export function analyzeTaskLocally(query) {
       makeStage("Script + Voice → Video", "script + voiceover", "video", "ai video generation", "Assemble a finished educational video."),
     ];
   } else if (contains(text, ["presentation", "slide deck", "slides", "powerpoint"])) {
+    intent = "presentation_generation";
     input = contains(text, ["outline", "brief"]) ? "outline" : "topic";
     output = "presentation";
     stages = [makeStage("Outline → Presentation", input, "presentation", "presentation generation", "Build a polished, editable slide deck.")];
   } else if (contains(text, ["logo", "brand mark"])) {
+    intent = "brand_design";
     input = "brand brief";
     output = "logo";
     stages = [makeStage("Brand Brief → Logo", "brand brief", "logo", "logo generation", "Generate logo directions from your brand idea.")];
   } else if (contains(text, ["image", "illustration", "artwork", "poster"])) {
+    intent = "image_creation";
     input = "prompt";
     output = "image";
     stages = [makeStage("Prompt → Image", "prompt", "image", "image generation", "Create a visual from a detailed prompt.")];
   } else if (contains(text, ["text to voice", "text-to-speech", "voiceover", "narration", "text to speech"])) {
+    intent = "audio_creation";
     input = "text";
     output = "audio";
     stages = [makeStage("Text → Voice", "text", "audio", "text to speech", "Create a natural-sounding voice track.")];
   } else if (contains(text, ["transcrib", "speech to text", "audio to text"])) {
+    intent = "transcription";
     input = "audio";
     output = "transcript";
     stages = [makeStage("Audio → Transcript", "audio", "transcript", "speech to text", "Convert spoken audio into searchable text.")];
   } else if (contains(text, ["website", "landing page", "web app"])) {
+    intent = "website_generation";
     input = "product brief";
     output = "website";
     stages = [makeStage("Brief → Website", "product brief", "website", "website generation", "Create a working web presence from your idea.")];
   } else if (contains(text, ["code", "program", "software"])) {
+    intent = "code_generation";
     input = "requirements";
     output = "code";
     stages = [makeStage("Requirements → Code", "requirements", "code", "code generation", "Turn requirements into implementation-ready code.")];
   } else if (contains(text, ["music", "song", "jingle"])) {
+    intent = "music_generation";
     input = "prompt";
     output = "audio";
     stages = [makeStage("Prompt → Music", "prompt", "audio", "music generation", "Generate an original musical track.")];
   } else if (contains(text, ["translat", "localiz"])) {
+    intent = "translation";
     input = "source text";
     output = "translated text";
     stages = [makeStage("Source → Translation", "source text", "translated text", "translation", "Translate while retaining tone and intent.")];
   } else if (contains(text, ["spreadsheet", "csv", "dataset", "data analysis"])) {
+    intent = "data_analysis";
     input = "data";
     output = "insights";
     stages = [makeStage("Data → Insights", "data", "insights", "data analysis", "Explore patterns and produce useful findings.")];
   } else {
-    stages = [makeStage("Brief → Draft", "brief", "draft", "content generation", "Generate a strong first draft from your request.")];
+    if (contains(text, ["video", "film", "youtube"])) {
+      intent = "video_editing";
+      input = "source video";
+      output = "edited video";
+      stages = [makeStage("Source → Edit", "source video", "edited video", "video editing", "Assemble a polished edited video.")];
+    } else if (contains(text, ["campaign", "social media", "marketing", "college event"])) {
+      intent = "campaign_planning";
+      input = "campaign brief";
+      output = "campaign assets";
+      stages = [makeStage("Brief → Plan", "campaign brief", "campaign plan", "content generation", "Shape the campaign strategy."), makeStage("Plan → Assets", "campaign plan", "campaign assets", "content generation", "Create the campaign content."), makeStage("Assets → Schedule", "campaign assets", "publishing schedule", "automation", "Organize the launch sequence.")];
+    } else if (contains(text, ["flashcard", "quiz", "study guide", "lecture notes"])) {
+      intent = "learning_support";
+      input = "learning notes";
+      output = "study materials";
+      stages = [makeStage("Notes → Structure", "learning notes", "structured content", "document summarization", "Organize the learning material."), makeStage("Structure → Study Guide", "structured content", "study guide", "tutoring", "Create a clear study guide."), makeStage("Study Guide → Quiz", "study guide", "quiz", "tutoring", "Generate practice questions."), makeStage("Quiz → Flashcards", "quiz", "flashcards", "content generation", "Create recall-focused flashcards.")];
+    } else if (contains(text, ["tool", "tools"]) && contains(text, ["find", "recommend", "need"])) {
+      intent = "tool_discovery";
+      input = "tool request";
+      output = "recommended tools";
+      stages = [makeStage("Goal → Criteria", "tool request", "selection criteria", "writing assistance", "Clarify what the tools must do."), makeStage("Criteria → Tools", "selection criteria", "recommended tools", "data analysis", "Compare suitable tools from the catalog.")];
+    } else {
+      return invalidAnalysis(query);
+    }
   }
 
-  return { goal: query, input, output, constraints, stages };
+  return { valid: true, confidence: 0.92, goal: query, intent, input, output, constraints, stages };
 }
 
 /**
@@ -204,7 +263,11 @@ export async function analyzeTaskWithLLM(query) {
     return analyzeTaskLocally(query);
   }
 
-  if (!Array.isArray(parsed.stages) || parsed.stages.length === 0) {
+  if (parsed.valid === false) {
+    return invalidAnalysis(query);
+  }
+
+  if (parsed.valid !== true || typeof parsed.confidence !== "number" || parsed.confidence < 0.65 || !parsed.goal || !parsed.intent || !Array.isArray(parsed.stages) || parsed.stages.length === 0) {
     return analyzeTaskLocally(query);
   }
 

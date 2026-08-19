@@ -30,8 +30,17 @@ router.post("/analyze-task", async (req, res) => {
     // 1. LLM: understand intent + decompose into stages/capabilities.
     const intent = await analyzeTaskWithLLM(query.trim());
 
+    if (intent.valid !== true || typeof intent.confidence !== "number" || intent.confidence < 0.65 || !intent.goal || !intent.intent || !Array.isArray(intent.stages) || intent.stages.length === 0) {
+      return res.status(422).json({
+        success: false,
+        valid: false,
+        errorCode: "INVALID_TASK",
+        message: "I couldn't understand that goal. Try describing what you want to create, transform, research, or accomplish.",
+      });
+    }
+
     // 2. DB + scoring: turn each stage's capability into ranked real tools.
-    const stages = await buildWorkflowRecommendations(intent.stages, intent.constraints || {});
+    const stages = await buildWorkflowRecommendations(intent.stages, intent.constraints || {}, intent);
 
     // 3. Persist the workflow and the search entry (best-effort — a DB
     // hiccup here shouldn't block returning results to the user).
@@ -72,6 +81,10 @@ router.post("/analyze-task", async (req, res) => {
     }
 
     return res.json({
+      success: true,
+      valid: true,
+      confidence: intent.confidence,
+      intent: intent.intent,
       workflowId: workflowDoc?._id ?? null,
       query: query.trim(),
       goal: intent.goal,

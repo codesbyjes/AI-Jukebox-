@@ -152,7 +152,11 @@ export async function recommendToolsForStage(capability, constraints = {}) {
  * Runs recommendation for every stage of a decomposed workflow.
  * Returns the stages enriched with ranked tool lists.
  */
-export async function buildWorkflowRecommendations(stages, constraints = {}) {
+export async function buildWorkflowRecommendations(stages, constraints = {}, analysis = null) {
+  if (analysis && (analysis.valid !== true || !analysis.goal || !analysis.intent)) {
+    return [];
+  }
+
   const enrichedStages = [];
 
   for (const [index, stage] of stages.entries()) {

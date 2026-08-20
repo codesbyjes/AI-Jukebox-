@@ -362,9 +362,11 @@ export function analyzeTaskLocally(query) {
 }
 
 /**
- * Calls the Anthropic Messages API to analyze a user's task and produce a
- * structured intent + stage decomposition. Throws on any failure — callers
- * are responsible for turning that into a clean HTTP error response.
+ * Calls the Gemini API to analyze a user's task and produce
+ * structured intent + stage decomposition.
+ *
+ * Gemini failures are retried before falling back to the
+ * local analyzer.
  */
 export async function analyzeTaskWithLLM(query) {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -374,111 +376,159 @@ export async function analyzeTaskWithLLM(query) {
     return analyzeTaskLocally(query);
   }
 
-  let response;
+  const maxAttempts = 3;
 
-  try {
-    response = await fetch(
-      `${GEMINI_API_URL}?key=${encodeURIComponent(apiKey)}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          systemInstruction: {
-            parts: [
-              {
-                text: SYSTEM_PROMPT,
-              },
-            ],
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      console.log(`[llm] Gemini attempt ${attempt}/${maxAttempts}...`);
+
+      const response = await fetch(
+        `${GEMINI_API_URL}?key=${encodeURIComponent(apiKey)}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
           },
-          contents: [
-            {
-              role: "user",
-              parts: [
-                {
-                  text: `User request: """${query}"""
+          body: JSON.stringify({
+            systemInstruction: {
+              parts: [{ text: SYSTEM_PROMPT }],
+            },
+            contents: [
+              {
+                role: "user",
+                parts: [
+                  {
+                    text: `User request: """${query}"""
 
 Return the JSON now.`,
-                },
-              ],
+                  },
+                ],
+              },
+            ],
+            generationConfig: {
+              temperature: 0.2,
+              maxOutputTokens: 1500,
+              responseMimeType: "application/json",
             },
-          ],
-          generationConfig: {
-            temperature: 0.2,
-            maxOutputTokens: 1500,
-            responseMimeType: "application/json",
-          },
-        }),
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+
+        console.error(
+          `[llm] Gemini API error (${response.status}):`,
+          errorBody
+        );
+
+        if (
+          [429, 500, 502, 503, 504].includes(response.status) &&
+          attempt < maxAttempts
+        ) {
+          const delay = attempt * 2000;
+
+          console.warn(
+            `[llm] Temporary Gemini error. Retrying in ${delay}ms...`
+          );
+
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          continue;
+        }
+
+        return analyzeTaskLocally(query);
       }
-    );
-  } catch (error) {
-    console.warn(
-      `[llm] Gemini request unavailable; using local task analysis (${error.message}).`
-    );
-    return analyzeTaskLocally(query);
+
+      const data = await response.json();
+
+      const text = data.candidates?.[0]?.content?.parts
+        ?.map((part) => part.text || "")
+        .join("")
+        .trim();
+
+      if (!text) {
+        console.warn("[llm] Gemini returned no text.");
+
+        if (attempt < maxAttempts) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, attempt * 1000)
+          );
+          continue;
+        }
+
+        return analyzeTaskLocally(query);
+      }
+
+      const cleaned = stripCodeFences(text);
+
+      let parsed;
+
+      try {
+        parsed = JSON.parse(cleaned);
+      } catch (err) {
+        console.error("[llm] Gemini returned invalid JSON:", cleaned);
+
+        if (attempt < maxAttempts) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, attempt * 1000)
+          );
+          continue;
+        }
+
+        return analyzeTaskLocally(query);
+      }
+
+      console.log(
+        "[llm] Gemini analysis:",
+        JSON.stringify(parsed, null, 2)
+      );
+
+      if (
+        parsed.valid !== true ||
+        typeof parsed.confidence !== "number" ||
+        parsed.confidence < 0.65 ||
+        !parsed.goal ||
+        !parsed.intent ||
+        !Array.isArray(parsed.stages) ||
+        parsed.stages.length === 0
+      ) {
+        console.warn("[llm] Gemini response failed validation.");
+
+        if (attempt < maxAttempts) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, attempt * 1000)
+          );
+          continue;
+        }
+
+        return analyzeTaskLocally(query);
+      }
+
+      console.log(
+        `[llm] Gemini analysis successful on attempt ${attempt}.`
+      );
+
+      return parsed;
+
+    } catch (error) {
+      console.error(
+        `[llm] Gemini request failed on attempt ${attempt}:`,
+        error.message
+      );
+
+      if (attempt < maxAttempts) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, attempt * 2000)
+        );
+        continue;
+      }
+    }
   }
 
-  if (!response.ok) {
-    const errorBody = await response.text();
+  console.warn(
+    "[llm] Gemini unavailable after all retries; using local task analysis."
+  );
 
-    console.error(
-      `[llm] Gemini API error (${response.status}):`,
-      errorBody
-    );
-
-    console.warn("[llm] using local task analysis.");
-    return analyzeTaskLocally(query);
-  }
-
-  const data = await response.json();
-
-  const text =
-    data.candidates?.[0]?.content?.parts
-      ?.map((part) => part.text || "")
-      .join("")
-      .trim();
-
-  if (!text) {
-    console.warn("[llm] Gemini returned no text; using local task analysis.");
-    return analyzeTaskLocally(query);
-  }
-
-  const cleaned = stripCodeFences(text);
-
-  let parsed;
-
-  try {
-    parsed = JSON.parse(cleaned);
-  } catch (err) {
-    console.error("[llm] Gemini returned invalid JSON:", cleaned);
-    console.warn(
-      `[llm] JSON parse failed; using local task analysis (${err.message}).`
-    );
-    return analyzeTaskLocally(query);
-  }
-
-  console.log("[llm] Gemini analysis:", JSON.stringify(parsed, null, 2));
-
-  if (
-    parsed.valid !== true ||
-    typeof parsed.confidence !== "number" ||
-    parsed.confidence < 0.65 ||
-    !parsed.goal ||
-    !parsed.intent ||
-    !Array.isArray(parsed.stages) ||
-    parsed.stages.length === 0
-  ) {
-    console.warn("[llm] Gemini response failed validation:", {
-      valid: parsed.valid,
-      confidence: parsed.confidence,
-      goal: parsed.goal,
-      intent: parsed.intent,
-      stages: parsed.stages,
-    });
-
-    return analyzeTaskLocally(query);
-  }
-
-  return parsed;
+  return analyzeTaskLocally(query);
 }
+

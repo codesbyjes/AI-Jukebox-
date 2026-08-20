@@ -8,41 +8,199 @@
  * into real tools from the database.
  */
 
-const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
+const GEMINI_API_URL =
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent";
 
-const SYSTEM_PROMPT = `You are the task-analysis engine inside AIJukebox, a product that turns a
-person's natural-language goal into a sequence of workflow stages, each
-labelled with the AI capability required to complete it.
+const SYSTEM_PROMPT = `You are the task-analysis engine inside AIJukebox.
+
+Your job is to understand what the user wants in natural language and convert
+their request into one or more workflow stages using ONLY the AI capabilities
+available in the catalog.
+
+IMPORTANT:
+Understand the user's MEANING, not just their exact words.
+
+The user may use:
+- synonyms
+- slang
+- abbreviations
+- indirect requests
+- incomplete sentences
+- conversational language
+- informal grammar
+- different ways of describing the same task
+
+Do NOT require the user to use words such as "create", "generate", "write",
+"make", or "AI".
+
+For example:
+- "make this less boring" can mean writing assistance.
+- "this picture looks terrible" can imply image editing.
+- "I need slides for my project" means presentation generation.
+- "I have notes and an exam tomorrow" can imply tutoring and document summarization.
+- "I want a catchy identity for my startup" can imply content generation and logo generation.
+- "turn this article into a YouTube video" can require summarization, script generation,
+  text to speech, and AI video generation.
 
 Rules:
-- Output ONLY valid JSON. No markdown fences, no commentary, no preamble.
-- Never name a specific AI tool or product. You only identify CAPABILITIES
-  (e.g. "document summarization", "text to speech", "AI video generation").
-  A separate system matches capabilities to real tools from a database.
-- Use only these catalog capability labels (case-insensitively): document
-  summarization, script generation, content generation, writing assistance,
-  text to speech, speech to text, AI video generation, video editing, image
-  generation, image editing, presentation generation, logo generation,
-  website generation, code generation, translation, data analysis, music
-  generation, automation, or tutoring. This prevents empty recommendations
-  caused by capabilities that have no verified catalog entries.
-- Break the task into as many or as few stages as the task genuinely needs.
-  A simple request ("generate a logo") can be a single stage. A complex
-  request ("turn a research paper into a video") should be broken into the
-  real sequential sub-tasks required.
-- Each stage must have a clear input and output so stages chain together
-  (stage N's output should conceptually feed stage N+1's input).
-- Infer constraints (pricing preference, need for API access, open-source
-  preference) only when the user states or clearly implies them. Otherwise
-  leave them null/absent.
 
-Classify the request before decomposing it. A request is valid only when it
-describes a meaningful, actionable goal involving creation, transformation,
-research, analysis, planning, or finding a tool. Greetings, names, isolated
-numbers, random words, and vague nonsense are invalid. Never force an invalid
-request into a default workflow.
+1. Output ONLY valid JSON.
+   No markdown fences.
+   No commentary.
+   No explanation outside the JSON.
 
-Return JSON matching exactly this shape:
+2. NEVER name a specific AI tool, company, website, or product.
+   Identify only the required CAPABILITIES.
+   A separate recommendation system will match those capabilities to real tools.
+
+3. You may ONLY use these catalog capability labels:
+
+   document summarization
+   script generation
+   content generation
+   writing assistance
+   text to speech
+   speech to text
+   AI video generation
+   video editing
+   image generation
+   image editing
+   presentation generation
+   logo generation
+   website generation
+   code generation
+   translation
+   data analysis
+   music generation
+   automation
+   tutoring
+
+4. Map natural-language requests to the closest appropriate catalog
+   capability. Do NOT require exact keyword matches.
+
+5. Prefer the most specific capability available.
+
+6. A request may require MULTIPLE capabilities.
+   Break complex requests into sequential stages.
+
+7. Stages must represent the actual work required.
+   Stage N's output should logically feed Stage N+1's input.
+
+8. Do not create unnecessary stages.
+   Simple requests should normally have one stage.
+
+9. Infer constraints only when the user explicitly states or clearly implies them.
+   Otherwise use:
+   pricing: "no_preference"
+   apiRequired: null
+   openSourcePreferred: null
+
+10. Understand indirect requests.
+
+Examples:
+
+User:
+"Make this paragraph sound professional."
+
+Capability:
+writing assistance
+
+User:
+"I've got a photo but the background is awful."
+
+Capability:
+image editing
+
+User:
+"I need something to present my college project."
+
+Capability:
+presentation generation
+
+User:
+"I have a bunch of lecture notes and my exam is tomorrow."
+
+Capabilities:
+document summarization
+tutoring
+
+User:
+"I want a cool logo for my new clothing brand."
+
+Capabilities:
+logo generation
+content generation
+
+User:
+"I have this research paper and want a 5 minute YouTube video."
+
+Capabilities:
+document summarization
+script generation
+text to speech
+AI video generation
+
+User:
+"I recorded my lecture. Turn it into notes."
+
+Capabilities:
+speech to text
+document summarization
+
+User:
+"I have a spreadsheet. Find patterns and explain what they mean."
+
+Capability:
+data analysis
+
+User:
+"I want background music for my video."
+
+Capability:
+music generation
+
+User:
+"I want my daily reports to automatically go to my team."
+
+Capability:
+automation
+
+User:
+"Build me a website for my startup."
+
+Capability:
+website generation
+
+User:
+"Help me understand this chapter before my exam."
+
+Capability:
+tutoring
+
+User:
+"Translate this into Kannada."
+
+Capability:
+translation
+
+11. Do NOT reject a meaningful request simply because the wording is unusual,
+informal, short, or indirect.
+
+12. A request is invalid ONLY when it is genuinely meaningless, empty,
+random, or unrelated to an actionable AI/tool-related task.
+
+13. Do not force greetings, random words, isolated numbers, or nonsense into
+a workflow.
+
+14. If a request is meaningful but somewhat ambiguous, make the most reasonable
+interpretation supported by the user's wording instead of immediately rejecting it.
+
+15. Confidence represents how confident you are that your interpretation is
+correct. Do not artificially lower confidence simply because the user uses
+informal language.
+
+Return JSON matching EXACTLY this shape:
+
 {
   "valid": boolean,
   "confidence": number,
@@ -209,65 +367,116 @@ export function analyzeTaskLocally(query) {
  * are responsible for turning that into a clean HTTP error response.
  */
 export async function analyzeTaskWithLLM(query) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
+
   if (!apiKey) {
+    console.warn("[llm] GEMINI_API_KEY missing; using local task analysis.");
     return analyzeTaskLocally(query);
   }
 
-  const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-5";
-
   let response;
+
   try {
-    response = await fetch(ANTHROPIC_API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model,
-        max_tokens: 1500,
-        system: SYSTEM_PROMPT,
-        messages: [
-          {
-            role: "user",
-            content: `User request: """${query}"""\n\nReturn the JSON now.`,
+    response = await fetch(
+      `${GEMINI_API_URL}?key=${encodeURIComponent(apiKey)}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          systemInstruction: {
+            parts: [
+              {
+                text: SYSTEM_PROMPT,
+              },
+            ],
           },
-        ],
-      }),
-    });
+          contents: [
+            {
+              role: "user",
+              parts: [
+                {
+                  text: `User request: """${query}"""
+
+Return the JSON now.`,
+                },
+              ],
+            },
+          ],
+          generationConfig: {
+            temperature: 0.2,
+            maxOutputTokens: 1500,
+            responseMimeType: "application/json",
+          },
+        }),
+      }
+    );
   } catch (error) {
-    console.warn(`[llm] request unavailable; using local task analysis (${error.message}).`);
+    console.warn(
+      `[llm] Gemini request unavailable; using local task analysis (${error.message}).`
+    );
     return analyzeTaskLocally(query);
   }
 
   if (!response.ok) {
-    console.warn(`[llm] request failed (${response.status}); using local task analysis.`);
+    const errorBody = await response.text();
+
+    console.error(
+      `[llm] Gemini API error (${response.status}):`,
+      errorBody
+    );
+
+    console.warn("[llm] using local task analysis.");
     return analyzeTaskLocally(query);
   }
 
   const data = await response.json();
-  const textBlock = data.content?.find((block) => block.type === "text");
-  if (!textBlock?.text) {
+
+  const text =
+    data.candidates?.[0]?.content?.parts
+      ?.map((part) => part.text || "")
+      .join("")
+      .trim();
+
+  if (!text) {
+    console.warn("[llm] Gemini returned no text; using local task analysis.");
     return analyzeTaskLocally(query);
   }
 
-  const cleaned = stripCodeFences(textBlock.text);
+  const cleaned = stripCodeFences(text);
 
   let parsed;
+
   try {
     parsed = JSON.parse(cleaned);
   } catch (err) {
-    console.warn(`[llm] invalid JSON response; using local task analysis (${err.message}).`);
+    console.error("[llm] Gemini returned invalid JSON:", cleaned);
+    console.warn(
+      `[llm] JSON parse failed; using local task analysis (${err.message}).`
+    );
     return analyzeTaskLocally(query);
   }
 
-  if (parsed.valid === false) {
-    return invalidAnalysis(query);
-  }
+  console.log("[llm] Gemini analysis:", JSON.stringify(parsed, null, 2));
 
-  if (parsed.valid !== true || typeof parsed.confidence !== "number" || parsed.confidence < 0.65 || !parsed.goal || !parsed.intent || !Array.isArray(parsed.stages) || parsed.stages.length === 0) {
+  if (
+    parsed.valid !== true ||
+    typeof parsed.confidence !== "number" ||
+    parsed.confidence < 0.65 ||
+    !parsed.goal ||
+    !parsed.intent ||
+    !Array.isArray(parsed.stages) ||
+    parsed.stages.length === 0
+  ) {
+    console.warn("[llm] Gemini response failed validation:", {
+      valid: parsed.valid,
+      confidence: parsed.confidence,
+      goal: parsed.goal,
+      intent: parsed.intent,
+      stages: parsed.stages,
+    });
+
     return analyzeTaskLocally(query);
   }
 
